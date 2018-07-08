@@ -1,11 +1,12 @@
 import React from 'react'
-import { StyleSheet, Text, TextInput, View, Button, Alert, TouchableOpacity } from 'react-native'
+import { StyleSheet, Text, TextInput, View, Button, Alert, TouchableOpacity, ActivityIndicator} from 'react-native'
 import firebase from 'react-native-firebase'
 import HTMLView from 'react-native-htmlview';
 import Moment from 'moment'
 import { PermissionsAndroid } from 'react-native';
 import Voice from 'react-native-voice';
 import { RNCamera } from 'react-native-camera';
+import {CountDownText} from 'react-native-countdown-timer-text';
 
 export default class Interview extends React.Component {
     state = {
@@ -35,7 +36,7 @@ export default class Interview extends React.Component {
         partialResults: [],
         end: ''
     };
-    allowSave = false;
+    allowSave = true;
     //savingVideo = false;
     //interviewState = "begin";
     userData = {};
@@ -50,6 +51,7 @@ export default class Interview extends React.Component {
     //displayHelpTimers = true;
     previewTime;
     answerTime;
+    countdownTime = 30;
     maxAttempts = -1;
     speechData = "";
     //recording = false;
@@ -208,7 +210,17 @@ export default class Interview extends React.Component {
                         >
                             <Text style={{fontSize: 14, color:'white'}}> Stop Recording </Text>
                         </TouchableOpacity>
-                        <Text style={{color:'white',alignSelf:'center',marginTop:7}}>00:00</Text>
+                        <CountDownText
+                            style={{color: 'white', alignSelf:'center'}}
+                            countType='seconds'
+                            auto={true}
+                            afterEnd={() => {}}
+                            timeLeft={this.countdownTime}
+                            step={-1}
+                            startText='30 sec'
+                            endText='0 sec'
+                            intervalText={(sec) => sec + ' sec'}
+                        />
                     </View>
                 </View>
             )
@@ -552,6 +564,7 @@ export default class Interview extends React.Component {
         clearInterval(this.timerFD);
         clearInterval(this.transcriptFD);
         clearInterval(this.acceptFD);
+
         let currentQuestion = this.state.currentQuestion;
         currentQuestion.completed = true;
         currentQuestion.transcript = this.state.speechData;
@@ -581,14 +594,13 @@ export default class Interview extends React.Component {
         // The path to the video file location on the phone is in currentQuestion.data.uri.
 
         if(currentQuestion.data && this.allowSave){
-            let filePath = currentQuestion.data.uri;
+            let filePath = currentQuestion.data.uri;//Here returned video file link correctly.
             let splitPath = filePath.split('/');
             //Need to test this actually is the filename (minus the path information).
             let fileName = splitPath[splitPath.length-1];
 
             //TODO get the file data from filePath specified on the android or ios device.
-            let videoData;
-
+        
             //path to save video in firebase reference.
             currentQuestion.videoUrl = this.state.fireScreen.id + "/" + this.state.fireScreenResponse.accessCode
                 +"/"+fileName;
@@ -597,7 +609,7 @@ export default class Interview extends React.Component {
             this.setState({savingVideo:true});
 
 
-            firebase.storage().ref(currentQuestion.videoUrl).put(videoData).then(snapshot=> {
+            firebase.storage().ref(currentQuestion.videoUrl).putFile(filePath).then(snapshot=> {
                 //TODO videoData in put() needs to be loaded first ^^^^^^ see previous TODO.
                 console.log('Uploaded a video blob!');
 
@@ -607,7 +619,7 @@ export default class Interview extends React.Component {
                 this.saveResponse(this.state.fireScreenResponse);
                 this.nextQuestionSuccess();
 
-            }, err => {
+            },err => {
 
                 this.setState({savingVideo:false});
                 Alert.alert(
@@ -692,7 +704,6 @@ export default class Interview extends React.Component {
 
     autoStartRecording(){
         this.setState({recording: true,speechData:""});
-
     }
 
     cameraReady(){
@@ -783,6 +794,7 @@ export default class Interview extends React.Component {
         clearInterval(this.timerFD);
         clearInterval(this.transcriptFD);
         clearInterval(this.acceptFD);
+
         this.acceptCountdown = 15;
         this.acceptFD = setInterval(()=>{
 
@@ -801,6 +813,7 @@ export default class Interview extends React.Component {
         clearInterval(this.timerFD);
         clearInterval(this.transcriptFD);
         clearInterval(this.acceptFD);
+
         this.transcriptCountdown = 60;
         this.transcriptFD = setInterval(()=>{
 
@@ -819,16 +832,13 @@ export default class Interview extends React.Component {
     saveResponse(fireScreenResponse){
 
         console.log("saving fireScreenResponse ",fireScreenResponse);
-        let path = "/fireScreenResponses/"+fireScreenResponse.accessCode;
+        let path = "/fireScreenResponses/" + fireScreenResponse.accessCode;
         delete fireScreenResponse.$key;
         delete fireScreenResponse.$exists;
-        if(this.allowSave){
-            console.log("Saving.. ",fireScreenResponse);
-            firebase.database().ref(path).set(fireScreenResponse);
-        }
-
-
-
+        // if(this.allowSave){
+        //     console.log("Saving.. ",fireScreenResponse);
+        //     firebase.database().ref(path).set(fireScreenResponse);
+        // }
     }
 
     sendSponsorEmail(){

@@ -5,6 +5,7 @@ import { SwitchNavigator } from 'react-navigation'
 import Loading from './Loading'
 import SignUp from './SignUp'
 import Login from './Login'
+import About from './About'
 import Main from './Main'
 import Interview from './Interview'
 // create our app's navigation stack
@@ -13,6 +14,7 @@ const App = SwitchNavigator(
         Loading,
         SignUp,
         Login,
+        About,
         Main,
         Interview
     },

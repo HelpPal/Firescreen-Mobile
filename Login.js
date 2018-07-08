@@ -9,7 +9,7 @@ export default class Login extends React.Component {
         const {email, password} = this.state
         firebase
             .auth()
-            .signInAndRetrieveDataWithEmailAndPassword(email, password)
+            .signInAndRetrieveDataWithEmailAndPassword('mike@firescreen.com', 'firescreen')
             .then(() => this.props.navigation.navigate('Main'))
             .catch(error => this.setState({errorMessage: error.message}))
     }
@@ -46,6 +46,11 @@ export default class Login extends React.Component {
                 >
                     <Text style={{color:'white'}}>Don't have an account? Sign Up</Text>
                 </TouchableOpacity>
+                <TouchableOpacity
+                    onPress={() => this.props.navigation.navigate('About')}
+                >
+                    <Text style={styles.textAbout}>About US</Text>
+                </TouchableOpacity>
             </View>
         )
     }
@@ -76,5 +81,9 @@ const styles = StyleSheet.create({
     },
     text: {
         color: 'white'
+    },
+    textAbout: {
+        color: 'white',
+        marginTop: 50
     }
 });
